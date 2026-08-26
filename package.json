@@ -1,0 +1,17 @@
+{
+  "name": "portfolio-commissions-api",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "check": "node --check api/commission.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "busboy": "^1.6.0",
+    "sharp": "^0.34.5"
+  }
+}

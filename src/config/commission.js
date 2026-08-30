@@ -8,5 +8,8 @@ export const REFERENCE_IMAGE_TYPES = new Map([
 ]);
 
 export const MODEL_LABELS = Object.freeze({
-  chibi: 'Modelo Chibi 3D', basico: 'Modelo Básico 3D', medio: 'Modelo Médio 3D',
+  chibi: 'Modelo Chibi 3D', 
+  basico: 'Modelo Básico 3D', 
+  medio: 'Modelo Médio 3D',
+  outros: 'outros',
 });

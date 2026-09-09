@@ -1,5 +1,5 @@
 {
-  "name": "portfolio-commissions-api-nest",
+  "name": "ProjectPortBackend",
   "private": true,
   "version": "0.1.0-skeleton",
   "description": "Esqueleto de avaliação: migração do backend de comissões para NestJS. Ver README.md desta pasta antes de instalar/rodar.",

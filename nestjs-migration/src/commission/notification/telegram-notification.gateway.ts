@@ -32,9 +32,11 @@ export class TelegramNotificationGateway implements NotificationGateway {
     const form = new FormData();
     form.set('chat_id', chatId);
     form.set('caption', formatCaption(payload));
+    // Buffer do Node não bate 1:1 com o tipo BlobPart do lib.dom nesta versão do TS;
+    // Uint8Array é o denominador comum que os dois entendem sem precisar de `as any`.
     form.set(
       'photo',
-      new Blob([payload.referenceFile.buffer], { type: payload.referenceFile.mimeType }),
+      new Blob([new Uint8Array(payload.referenceFile.buffer)], { type: payload.referenceFile.mimeType }),
       `referencia.${payload.referenceFile.extension}`,
     );
 

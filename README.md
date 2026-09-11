@@ -89,15 +89,19 @@ npm test        # roda toda a suíte (service, facade, DTO, pipe de imagem)
 
 A Vercel detecta NestJS com **zero-config**: reconhece `src/main.ts` como entrypoint, builda e
 roda como uma única Vercel Function em Fluid Compute — não é mais necessário declarar
-`builds`/`routes` manuais como no modelo antigo de function única (`api/commission.js`).
+`builds`/`routes` manuais como no modelo antigo de function única (`api/commission.js`), e por
+isso **este repo não tem `vercel.json`**.
+
+> Nota: uma tentativa anterior de configurar `maxDuration` via `vercel.json` com
+> `functions: { "src/main.ts": {...} }` quebrou o build com o erro *"The pattern src/main.ts
+> defined in functions doesn't match any Serverless Functions inside the api directory"*. A
+> chave `functions` do `vercel.json` só reconhece caminhos dentro de `api/` (modelo antigo de
+> function individual) — não se aplica a apps detectados via zero-config. Se precisar aumentar
+> o timeout padrão, configure em **Project Settings → Functions** no dashboard da Vercel, não
+> pelo `vercel.json`.
 
 Configure `ALLOWED_ORIGINS`, `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID` em
 **Settings → Environment Variables** para Preview e Production.
-
-> Nota: o `vercel.json` deste repo aponta `maxDuration` para `src/main.ts`. Isso ainda não foi
-> validado num deploy real — confirme no primeiro deploy se a Vercel aceita esse caminho como
-> chave em `functions`, ou se o nome esperado é outro (ex: o arquivo compilado). Se o deploy
-> reclamar, o mapeamento certo aparece no log de build.
 
 Para obter o `TELEGRAM_CHAT_ID`, envie uma mensagem ao bot e abra
 `https://api.telegram.org/bot<SEU_TOKEN>/getUpdates` uma única vez no navegador. Copie

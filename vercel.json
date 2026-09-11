@@ -1,7 +1,4 @@
 {
-  "functions": {
-    "api/commission.js": {
-      "maxDuration": 10
-    }
-  }
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nestjs"
 }

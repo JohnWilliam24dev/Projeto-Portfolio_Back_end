@@ -144,3 +144,6 @@ vite.config.ts.timestamp-*
 
 # Vercel local project metadata
 .vercel/
+
+# NestJS build output e artefatos de compilação incremental
+*.tsbuildinfo

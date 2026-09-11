@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/commission.js": {
+    "src/main.ts": {
       "maxDuration": 10
     }
   }

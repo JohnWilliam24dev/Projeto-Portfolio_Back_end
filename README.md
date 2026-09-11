@@ -87,18 +87,20 @@ npm test        # roda toda a suíte (service, facade, DTO, pipe de imagem)
 
 ## Deploy na Vercel
 
-A Vercel detecta NestJS com **zero-config**: reconhece `src/main.ts` como entrypoint, builda e
-roda como uma única Vercel Function em Fluid Compute — não é mais necessário declarar
-`builds`/`routes` manuais como no modelo antigo de function única (`api/commission.js`), e por
-isso **este repo não tem `vercel.json`**.
+A Vercel detecta NestJS com **zero-config**: reconhece `src/main.ts` como entrypoint e builda
+como uma única Vercel Function em Fluid Compute — não é mais necessário declarar
+`builds`/`routes` manuais como no modelo antigo de function única (`api/commission.js`).
 
-> Nota: uma tentativa anterior de configurar `maxDuration` via `vercel.json` com
-> `functions: { "src/main.ts": {...} }` quebrou o build com o erro *"The pattern src/main.ts
-> defined in functions doesn't match any Serverless Functions inside the api directory"*. A
-> chave `functions` do `vercel.json` só reconhece caminhos dentro de `api/` (modelo antigo de
-> function individual) — não se aplica a apps detectados via zero-config. Se precisar aumentar
-> o timeout padrão, configure em **Project Settings → Functions** no dashboard da Vercel, não
-> pelo `vercel.json`.
+Este repo tem um `vercel.json` mínimo, só com `"framework": "nestjs"`. Isso existe porque
+Framework Preset e Output Directory no dashboard da Vercel são **configuração do projeto
+inteiro**, compartilhada entre todas as branches — e enquanto a `main` ainda estiver rodando a
+implementação antiga (`api/commission.js`, sem `src/main.ts`), o deploy dela ressincroniza esse
+dropdown pra "Other", derrubando a detecção que essa branch precisa. Declarar o framework
+explicitamente no `vercel.json` faz esse override valer por commit, sem depender do estado
+global do projeto no dashboard.
+
+> Depois que esta branch virar a `main` de verdade (e o código antigo sumir de vez), esse
+> `vercel.json` deixa de ser estritamente necessário — mas não faz mal deixá-lo.
 
 Configure `ALLOWED_ORIGINS`, `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID` em
 **Settings → Environment Variables** para Preview e Production.

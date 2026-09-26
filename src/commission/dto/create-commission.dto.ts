@@ -1,44 +1,59 @@
-import { IsEmpty, IsIn, IsNumberString, IsOptional, IsString, Length, MaxLength } from 'class-validator';
-import { Transform } from 'class-transformer';
-import { MODEL_LABELS } from '../../config/commission.config';
+import { ArrayMaxSize, IsArray, IsEmpty, IsOptional, IsString, IsUUID, Length, ValidateNested } from 'class-validator';
+import { plainToInstance, Transform } from 'class-transformer';
+import { MAX_ADICIONAIS_POR_PRODUTO, MAX_DESCRICAO_LENGTH } from '../../config/commission.config';
+import { AdicionalSelecionadoDto } from './adicional-selecionado.dto';
+import { sanitizeText } from './sanitize-text.transform';
 
-// Remove caracteres de controle e colapsa espaços, igual ao normalizeText() do validator atual.
-const sanitizeText = ({ value }: { value: unknown }) =>
-  String(value ?? '')
-    .replace(/[\u0000-\u001F\u007F]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+// `adicionais` chega como campo de texto dentro do multipart/form-data (o front serializa
+// o array em JSON antes de anexar) — não existe forma nativa de mandar array aninhado em
+// multipart. Ausente/vazio vira lista vazia; string presente é decodificada como JSON.
+// Se o JSON for inválido ou não for um array, devolve o valor bruto pro @IsArray() abaixo
+// acusar o erro de formato, em vez de mascarar com um erro genérico de parsing.
+//
+// Instanciamos AdicionalSelecionadoDto aqui dentro (em vez de usar @Type()) porque, quando
+// um campo tem @Transform customizado, o class-transformer usa o valor retornado por ele
+// como final — @Type() deixa de converter os itens do array em instância, e o @ValidateNested
+// abaixo não teria o que validar.
+const parseAdicionais = ({ value }: { value: unknown }) => {
+  if (value === undefined || value === null || value === '') return [];
+  let parsed: unknown = value;
+  if (typeof parsed === 'string') {
+    try {
+      parsed = JSON.parse(parsed);
+    } catch {
+      return parsed;
+    }
+  }
+  if (!Array.isArray(parsed)) return parsed;
+  return plainToInstance(AdicionalSelecionadoDto, parsed);
+};
 
 export class CreateCommissionDto {
+  @IsUUID(undefined, { message: 'Tipo de produto inválido.' })
+  tipoProdutoId!: string;
+
   @Transform(sanitizeText)
   @IsString()
-  @Length(1, 80, { message: 'Nickname inválido.' })
-  nickname!: string;
+  @Length(1, 80, { message: 'Nome do cliente inválido.' })
+  nomeCliente!: string;
 
   @Transform(sanitizeText)
   @IsString()
   @Length(1, 160, { message: 'Contato inválido.' })
-  contact!: string;
-
-  @IsIn(Object.keys(MODEL_LABELS), { message: 'Tipo de modelo inválido.' })
-  modelType!: string;
+  contato!: string;
 
   @Transform(sanitizeText)
-  @IsOptional()
-  @MaxLength(1_000)
-  additionalContentNotes?: string;
+  @IsString()
+  @Length(1, MAX_DESCRICAO_LENGTH, { message: 'Descrição inválida.' })
+  descricao!: string;
 
-  // Mantido como string numérica + limite de 2 dígitos, igual ao parseQuantity() atual
-  // (a conversão pra number e o teto de 20 continuam no service, que é onde mora a regra de negócio).
-  @IsNumberString({}, { message: 'Quantidade de acessórios inválida.' })
-  @Length(1, 2, { message: 'Quantidade de acessórios inválida.' })
-  acessorios!: string;
+  @Transform(parseAdicionais)
+  @IsArray({ message: 'Lista de adicionais em formato inválido.' })
+  @ArrayMaxSize(MAX_ADICIONAIS_POR_PRODUTO, { message: 'Quantidade de adicionais inválida.' })
+  @ValidateNested({ each: true })
+  adicionais!: AdicionalSelecionadoDto[];
 
-  @IsNumberString({}, { message: 'Quantidade de expressões inválida.' })
-  @Length(1, 2, { message: 'Quantidade de expressões inválida.' })
-  expressoesExtras!: string;
-
-  // Honeypot anti-bot: se vier preenchido, o pedido é descartado (checado no controller/service).
+  // Honeypot anti-bot: se vier preenchido, o pedido é descartado (checado no service).
   @IsOptional()
   @IsEmpty({ message: 'Pedido inválido.' })
   website?: string;

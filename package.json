@@ -21,6 +21,9 @@
     ],
     "rootDir": ".",
     "testRegex": "test/.*\\.spec\\.ts$",
+    "setupFiles": [
+      "reflect-metadata"
+    ],
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },

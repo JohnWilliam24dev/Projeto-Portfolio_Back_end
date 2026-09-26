@@ -1,25 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { MODEL_LABELS } from '../../config/commission.config';
 import { IntegrationError } from '../../shared/errors/domain.errors';
 import { NotificationGateway } from './notification-gateway.port';
 import { NotifyPayload } from '../commission.types';
 
-function formatCaption({ orderId, order }: NotifyPayload): string {
+function formatCaption(payload: NotifyPayload): string {
+  const linhasAdicionais = payload.adicionais.length
+    ? payload.adicionais.map((a) => `• ${a.nome}: ${a.descricao} (R$ ${a.valor.toFixed(2)})`).join('\n')
+    : 'Nenhum';
+
   return [
-    `Novo pedido #${orderId}`,
-    `Nome: ${order.nickname}`,
-    `Contato: ${order.contact}`,
-    `Modelo: ${MODEL_LABELS[order.modelType]}`,
-    `Acessórios: ${order.acessorios}`,
-    `Expressões extras: ${order.expressoesExtras}`,
-    `Adicionais: ${order.additionalContentNotes || 'Nenhum'}`,
+    `Novo pedido #${payload.token}`,
+    `Cliente: ${payload.nomeCliente}`,
+    `Contato: ${payload.contato}`,
+    `Tipo: ${payload.tipoProdutoNome}`,
+    `Descrição: ${payload.descricao}`,
+    `Adicionais:\n${linhasAdicionais}`,
+    `Valor simulado: R$ ${payload.precoSimulado.toFixed(2)}`,
   ].join('\n');
 }
 
-// Único ponto do módulo acoplado ao Telegram — igual à intenção original do gateway atual.
-// Trocar de provedor de notificação significa criar outra classe que implemente
-// NotificationGateway e trocar o `useClass` no commission.module.ts.
+// Único ponto do módulo acoplado ao Telegram. Multi-maker de verdade ainda vai precisar
+// de um chat_id por Maker (hoje TELEGRAM_CHAT_ID é global, via env) — não mexi nisso agora
+// pra não expandir o escopo desta troca; fica registrado como próximo débito.
 @Injectable()
 export class TelegramNotificationGateway implements NotificationGateway {
   constructor(private readonly config: ConfigService) {}
@@ -32,8 +35,6 @@ export class TelegramNotificationGateway implements NotificationGateway {
     const form = new FormData();
     form.set('chat_id', chatId);
     form.set('caption', formatCaption(payload));
-    // Buffer do Node não bate 1:1 com o tipo BlobPart do lib.dom nesta versão do TS;
-    // Uint8Array é o denominador comum que os dois entendem sem precisar de `as any`.
     form.set(
       'photo',
       new Blob([new Uint8Array(payload.referenceFile.buffer)], { type: payload.referenceFile.mimeType }),

@@ -18,7 +18,7 @@ export class CommissionController {
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('referenceFile', { limits: { fileSize: MAX_REFERENCE_FILE_SIZE } }))
   async submit(@Body() dto: CreateCommissionDto, @UploadedFile(ReferenceImagePipe) referenceFile: Express.Multer.File) {
-    const { orderId } = await this.commissionFacade.submitCommission(dto, referenceFile);
-    return { success: true, orderId };
+    const { token } = await this.commissionFacade.submitCommission(dto, referenceFile);
+    return { success: true, token };
   }
 }

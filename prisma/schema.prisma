@@ -4,8 +4,12 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  // Obrigatório: Prisma 7 gera ESM por padrão, e este projeto compila pra CommonJS
+  // (tsconfig "module": "commonjs", sem "type": "module" no package.json). Sem isso
+  // o `require()` do client gerado quebra com ERR_REQUIRE_ESM em runtime.
+  moduleFormat = "cjs"
 }
 
 datasource db {

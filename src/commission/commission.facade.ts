@@ -16,7 +16,7 @@ import { CreateCommissionDto } from './dto/create-commission.dto';
 export class CommissionFacade {
   constructor(private readonly commissionService: CommissionService) {}
 
-  async submitCommission(dto: CreateCommissionDto, referenceFile: Express.Multer.File): Promise<{ orderId: string }> {
+  async submitCommission(dto: CreateCommissionDto, referenceFile: Express.Multer.File): Promise<{ token: string }> {
     return this.commissionService.submit(dto, referenceFile);
   }
 }

@@ -11,9 +11,8 @@ export const REFERENCE_IMAGE_TYPES = new Map<string, ImageSignature>([
   ['image/webp', {}],
 ]);
 
-export const MODEL_LABELS: Readonly<Record<string, string>> = Object.freeze({
-  chibi: 'Modelo Chibi 3D',
-  basico: 'Modelo Básico 3D',
-  medio: 'Modelo Médio 3D',
-  outros: 'Outros',
-});
+// O catálogo (nome/preço de TipoProduto e TipoAdicional) agora vive no banco, configurado
+// pelo Maker — não existe mais uma lista fixa tipo MODEL_LABELS aqui. O que continua sendo
+// regra de aplicação (não de catálogo) é o teto de itens por submissão, defesa contra abuso.
+export const MAX_ADICIONAIS_POR_PRODUTO = 20;
+export const MAX_DESCRICAO_LENGTH = 1_000;

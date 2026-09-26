@@ -10,7 +10,8 @@
     "build": "nest build",
     "start": "nest start",
     "start:dev": "nest start --watch",
-    "test": "jest"
+    "test": "jest",
+    "postinstall": "prisma skills sync || exit 0"
   },
   "jest": {
     "moduleFileExtensions": [
@@ -30,8 +31,11 @@
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "pg": "^8.23.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "sharp": "^0.35.4"
@@ -44,10 +48,16 @@
     "@nestjs/testing": "^11.0.0",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.0",
-    "@types/multer": "^2.2.0",
+    "@types/multer": "^1.4.13",
     "@types/node": "^20.0.0",
     "jest": "^29.7.0",
+    "prisma": "^7.10.0",
     "ts-jest": "^29.1.0",
     "typescript": "^5.5.0"
+  },
+  "allowScripts": {
+    "prisma@6.19.3": true,
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.3": true
   }
 }

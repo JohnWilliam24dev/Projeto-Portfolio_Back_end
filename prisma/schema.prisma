@@ -11,3 +11,129 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// ---------------------------------------------------------------------------
+// Catálogo (configurado pelo Maker)
+// ---------------------------------------------------------------------------
+
+model Maker {
+  id              String   @id @default(uuid()) @db.Uuid
+  nome            String
+  termosCondicoes String?  @map("termos_condicoes")
+  facoENaoFaco    String?  @map("faco_e_nao_faco")
+  criadoEm        DateTime @default(now()) @map("criado_em")
+
+  tiposProduto   TipoProduto[]
+  tiposAdicional TipoAdicional[]
+  pedidos        Pedido[]
+
+  @@map("makers")
+}
+
+model TipoProduto {
+  id         String   @id @default(uuid()) @db.Uuid
+  makerId    String   @map("maker_id") @db.Uuid
+  nome       String
+  precoMedio Decimal  @map("preco_medio") @db.Decimal(10, 2)
+  descricao  String?
+  criadoEm   DateTime @default(now()) @map("criado_em")
+
+  maker          Maker                  @relation(fields: [makerId], references: [id])
+  tiposAdicional TipoProdutoAdicional[]
+  produtos       Produto[]
+
+  @@index([makerId])
+  @@map("tipos_produto")
+}
+
+model TipoAdicional {
+  id          String   @id @default(uuid()) @db.Uuid
+  makerId     String   @map("maker_id") @db.Uuid
+  nome        String
+  descricao   String?
+  // Regra de negócio (porcentagem XOR valor_fixo) é reforçada por CHECK constraint
+  // na migration — ver prisma/migrations/.../migration.sql após o `migrate dev`.
+  porcentagem Decimal? @db.Decimal(5, 2)
+  valorFixo   Decimal? @map("valor_fixo") @db.Decimal(10, 2)
+  criadoEm    DateTime @default(now()) @map("criado_em")
+
+  maker             Maker                  @relation(fields: [makerId], references: [id])
+  tiposProduto      TipoProdutoAdicional[]
+  adicionaisProduto AdicionalProduto[]
+
+  @@index([makerId])
+  @@map("tipos_adicional")
+}
+
+// Junção N:N — quais Tipos Adicionais valem para qual Tipo de Produto.
+model TipoProdutoAdicional {
+  tipoProdutoId   String @map("tipo_produto_id") @db.Uuid
+  tipoAdicionalId String @map("tipo_adicional_id") @db.Uuid
+
+  tipoProduto   TipoProduto   @relation(fields: [tipoProdutoId], references: [id])
+  tipoAdicional TipoAdicional @relation(fields: [tipoAdicionalId], references: [id])
+
+  @@id([tipoProdutoId, tipoAdicionalId])
+  @@map("tipos_produto_adicional")
+}
+
+// ---------------------------------------------------------------------------
+// Simulação e pedido (preenchidos pelo Guest)
+// ---------------------------------------------------------------------------
+
+model Produto {
+  id            String   @id @default(uuid()) @db.Uuid
+  makerId       String   @map("maker_id") @db.Uuid
+  tipoProdutoId String   @map("tipo_produto_id") @db.Uuid
+  pedidoId      String   @map("pedido_id") @db.Uuid
+  nomeCliente   String   @map("nome_cliente")
+  contato       String
+  descricao     String
+  precoSimulado Decimal  @map("preco_simulado") @db.Decimal(10, 2)
+  criadoEm      DateTime @default(now()) @map("criado_em")
+
+  tipoProduto       TipoProduto        @relation(fields: [tipoProdutoId], references: [id])
+  pedido            Pedido             @relation(fields: [pedidoId], references: [id])
+  adicionaisProduto AdicionalProduto[]
+
+  @@index([makerId])
+  @@index([tipoProdutoId])
+  @@index([pedidoId])
+  @@map("produtos")
+}
+
+model AdicionalProduto {
+  id              String @id @default(uuid()) @db.Uuid
+  produtoId       String @map("produto_id") @db.Uuid
+  tipoAdicionalId String @map("tipo_adicional_id") @db.Uuid
+  descricao       String
+
+  produto       Produto       @relation(fields: [produtoId], references: [id])
+  tipoAdicional TipoAdicional @relation(fields: [tipoAdicionalId], references: [id])
+
+  @@index([produtoId])
+  @@map("adicionais_produto")
+}
+
+enum StatusPedido {
+  PENDENTE
+  EM_ANDAMENTO
+  CONCLUIDO
+  CANCELADO
+}
+
+model Pedido {
+  id       String       @id @default(uuid()) @db.Uuid
+  makerId  String       @map("maker_id") @db.Uuid
+  // Até 5 caracteres alfanuméricos, gerado e checado por retry na aplicação
+  // (unique index é quem garante ausência de colisão de fato).
+  token    String       @unique @db.VarChar(5)
+  status   StatusPedido @default(PENDENTE)
+  criadoEm DateTime     @default(now()) @map("criado_em")
+
+  maker    Maker     @relation(fields: [makerId], references: [id])
+  produtos Produto[]
+
+  @@index([makerId])
+  @@map("pedidos")
+}

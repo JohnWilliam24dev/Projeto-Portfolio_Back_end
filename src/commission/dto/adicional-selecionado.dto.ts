@@ -1,6 +1,6 @@
 import { IsString, IsUUID, Length } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { sanitizeText } from './sanitize-text.transform';
+import { sanitizeText } from '../../shared/dto/sanitize-text.transform';
 
 export class AdicionalSelecionadoDto {
   @IsUUID(undefined, { message: 'Adicional inválido.' })

@@ -21,11 +21,17 @@ datasource db {
 // ---------------------------------------------------------------------------
 
 model Maker {
-  id              String   @id @default(uuid()) @db.Uuid
+  id              String    @id @default(uuid()) @db.Uuid
   nome            String
-  termosCondicoes String?  @map("termos_condicoes")
-  facoENaoFaco    String?  @map("faco_e_nao_faco")
-  criadoEm        DateTime @default(now()) @map("criado_em")
+  termosCondicoes String?   @map("termos_condicoes")
+  facoENaoFaco    String?   @map("faco_e_nao_faco")
+  // Auth via API key (decisão: app precisa funcionar offline, então um JWT de vida curta
+  // não serve bem — uma credencial estática guardada no dispositivo é mais adequada agora;
+  // troca pra outro esquema fica fácil já que nada além do ApiKeyGuard depende do formato).
+  // Só o HASH é armazenado — o segredo em si só existe no momento em que é gerado/rotacionado.
+  apiKeySecretHash String?  @map("api_key_secret_hash")
+  apiKeyGeradaEm   DateTime? @map("api_key_gerada_em")
+  criadoEm        DateTime  @default(now()) @map("criado_em")
 
   tiposProduto   TipoProduto[]
   tiposAdicional TipoAdicional[]

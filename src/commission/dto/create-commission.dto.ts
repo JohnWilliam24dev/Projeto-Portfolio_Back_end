@@ -2,7 +2,7 @@ import { ArrayMaxSize, IsArray, IsEmpty, IsOptional, IsString, IsUUID, Length, V
 import { plainToInstance, Transform } from 'class-transformer';
 import { MAX_ADICIONAIS_POR_PRODUTO, MAX_DESCRICAO_LENGTH } from '../../config/commission.config';
 import { AdicionalSelecionadoDto } from './adicional-selecionado.dto';
-import { sanitizeText } from './sanitize-text.transform';
+import { sanitizeText } from '../../shared/dto/sanitize-text.transform';
 
 // `adicionais` chega como campo de texto dentro do multipart/form-data (o front serializa
 // o array em JSON antes de anexar) — não existe forma nativa de mandar array aninhado em

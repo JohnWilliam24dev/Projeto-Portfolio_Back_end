@@ -21,3 +21,21 @@ export class IntegrationError extends HttpException {
     super(message, HttpStatus.BAD_GATEWAY);
   }
 }
+
+export class NotFoundError extends HttpException {
+  constructor(message = 'Recurso não encontrado.') {
+    super(message, HttpStatus.NOT_FOUND);
+  }
+}
+
+export class UnauthorizedError extends HttpException {
+  constructor(message = 'Credencial ausente ou inválida.') {
+    super(message, HttpStatus.UNAUTHORIZED);
+  }
+}
+
+export class ForbiddenError extends HttpException {
+  constructor(message = 'Você não tem permissão para fazer isso.') {
+    super(message, HttpStatus.FORBIDDEN);
+  }
+}

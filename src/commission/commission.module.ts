@@ -1,10 +1,15 @@
 import { Module } from '@nestjs/common';
+import { PrismaModule } from '../shared/prisma/prisma.module';
+import { TelegramModule } from '../shared/notification/telegram.module';
+import { StorageModule } from '../shared/storage/storage.module';
 import { CommissionController } from './commission.controller';
 import { CommissionFacade } from './commission.facade';
 import { CommissionService } from './commission.service';
-import { ImageSanitizerService } from './image/image-sanitizer.service';
+import { ImageSanitizerService } from '../shared/image/image-sanitizer.service';
 import { NOTIFICATION_GATEWAY } from './notification/notification-gateway.port';
 import { TelegramNotificationGateway } from './notification/telegram-notification.gateway';
+import { COMMISSION_REPOSITORY } from './persistence/commission-repository.port';
+import { PrismaCommissionRepository } from './persistence/prisma-commission.repository';
 
 // Equivalente a createCommissionController.js: aqui é onde a "porta" NotificationGateway
 // ganha uma implementação concreta. Trocar Telegram por e-mail/WhatsApp no futuro é só trocar
@@ -15,12 +20,14 @@ import { TelegramNotificationGateway } from './notification/telegram-notificatio
 // importar CommissionModule e injetar CommissionService diretamente, o Nest recusa em tempo
 // de bootstrap — a única porta de entrada é a facade.
 @Module({
+  imports: [PrismaModule, TelegramModule, StorageModule],
   controllers: [CommissionController],
   providers: [
     CommissionFacade,
     CommissionService,
     ImageSanitizerService,
     { provide: NOTIFICATION_GATEWAY, useClass: TelegramNotificationGateway },
+    { provide: COMMISSION_REPOSITORY, useClass: PrismaCommissionRepository },
   ],
   exports: [CommissionFacade],
 })

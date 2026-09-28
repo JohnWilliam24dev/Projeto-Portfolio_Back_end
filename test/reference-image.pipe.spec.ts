@@ -1,6 +1,6 @@
-import { ReferenceImagePipe } from '../src/commission/validators/reference-image.pipe';
+import { ReferenceImagePipe } from '../src/shared/image/reference-image.pipe';
 import { ValidationError } from '../src/shared/errors/domain.errors';
-import { MAX_REFERENCE_FILE_SIZE } from '../src/config/commission.config';
+import { MAX_REFERENCE_FILE_SIZE } from '../src/config/reference-image.config';
 
 // Paridade com test/commissionRequestValidator.test.js do backend JS: mesmos três casos,
 // agora exercitados através do pipe que o Nest injeta em @UploadedFile().

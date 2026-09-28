@@ -2,8 +2,8 @@ import { Body, Controller, HttpCode, HttpStatus, Post, UploadedFile, UseIntercep
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CommissionFacade } from './commission.facade';
 import { CreateCommissionDto } from './dto/create-commission.dto';
-import { ReferenceImagePipe } from './validators/reference-image.pipe';
-import { MAX_REFERENCE_FILE_SIZE } from '../config/commission.config';
+import { ReferenceImagePipe } from '../shared/image/reference-image.pipe';
+import { MAX_REFERENCE_FILE_SIZE } from '../config/reference-image.config';
 
 // CORS, rate limit e método HTTP ficam a cargo de middlewares/guards globais (app.module.ts),
 // não do controller — no Nest isso não precisa ser reimplementado à mão como no cors.js atual.

@@ -1,6 +1,6 @@
 import { Injectable, PipeTransform } from '@nestjs/common';
-import { MAX_REFERENCE_FILE_SIZE, REFERENCE_IMAGE_TYPES } from '../../config/commission.config';
-import { ValidationError } from '../../shared/errors/domain.errors';
+import { MAX_REFERENCE_FILE_SIZE, REFERENCE_IMAGE_TYPES } from '../../config/reference-image.config';
+import { ValidationError } from '../errors/domain.errors';
 
 // Mesma lógica de hasExpectedImageSignature() do validator atual: nunca confia no mimetype
 // que o navegador manda, sempre confere os magic bytes do buffer recebido.

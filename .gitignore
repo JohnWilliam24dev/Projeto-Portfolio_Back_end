@@ -147,3 +147,5 @@ vite.config.ts.timestamp-*
 
 # NestJS build output e artefatos de compilação incremental
 *.tsbuildinfo
+
+/src/generated/prisma

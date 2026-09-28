@@ -1,3 +1,5 @@
+import { SafeReferenceFile } from '../shared/image/safe-reference-file';
+
 export interface CommissionOrder {
   nickname: string;
   contact: string;
@@ -5,12 +7,6 @@ export interface CommissionOrder {
   additionalContentNotes: string;
   acessorios: number;
   expressoesExtras: number;
-}
-
-export interface SafeReferenceFile {
-  buffer: Buffer;
-  mimeType: string;
-  extension: string;
 }
 
 export interface NotifyPayload {

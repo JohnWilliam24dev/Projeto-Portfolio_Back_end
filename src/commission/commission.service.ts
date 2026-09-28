@@ -2,9 +2,10 @@ import { Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { ValidationError } from '../shared/errors/domain.errors';
 import { CreateCommissionDto } from './dto/create-commission.dto';
-import { ImageSanitizerService } from './image/image-sanitizer.service';
+import { ImageSanitizerService } from '../shared/image/image-sanitizer.service';
 import { NOTIFICATION_GATEWAY, NotificationGateway } from './notification/notification-gateway.port';
 import { CommissionOrder } from './commission.types';
+import { COMMISSION_REPOSITORY, CommissionRepository } from './persistence/commission-repository.port';
 
 const MAX_QUANTITY = 20;
 
@@ -15,6 +16,7 @@ export class CommissionService {
   constructor(
     private readonly imageSanitizer: ImageSanitizerService,
     @Inject(NOTIFICATION_GATEWAY) private readonly notificationGateway: NotificationGateway,
+    @Inject(COMMISSION_REPOSITORY) private readonly commissionRepository: CommissionRepository,
   ) {}
 
   async submit(dto: CreateCommissionDto, referenceFile: Express.Multer.File) {
@@ -31,6 +33,10 @@ export class CommissionService {
 
     const safeReferenceFile = await this.imageSanitizer.sanitize(referenceFile);
     const orderId = randomUUID();
+    // Único acréscimo ao fluxo da main: subir a imagem + persistir ANTES de notificar.
+    // O buffer segue em memória: o Telegram recebe a imagem em si (não o link), como sempre. Contrato de entrada,
+    // resposta ({ orderId }) e erros (502 se o Telegram falhar) seguem idênticos ao legado.
+    await this.commissionRepository.salvar(orderId, order, safeReferenceFile);
     await this.notificationGateway.notify({ orderId, order, referenceFile: safeReferenceFile });
     return { orderId };
   }

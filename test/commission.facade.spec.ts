@@ -1,7 +1,8 @@
 import { Test } from '@nestjs/testing';
 import { CommissionFacade } from '../src/commission/commission.facade';
 import { CommissionService } from '../src/commission/commission.service';
-import { ImageSanitizerService } from '../src/commission/image/image-sanitizer.service';
+import { ImageSanitizerService } from '../src/shared/image/image-sanitizer.service';
+import { COMMISSION_REPOSITORY } from '../src/commission/persistence/commission-repository.port';
 import { NOTIFICATION_GATEWAY } from '../src/commission/notification/notification-gateway.port';
 import { CreateCommissionDto } from '../src/commission/dto/create-commission.dto';
 
@@ -12,13 +13,15 @@ import { CreateCommissionDto } from '../src/commission/dto/create-commission.dto
 describe('CommissionFacade', () => {
   it('delega o pedido para o CommissionService e retorna o orderId', async () => {
     let notifiedPayload: unknown;
+    const events: string[] = [];
 
     const moduleRef = await Test.createTestingModule({
       providers: [
         CommissionFacade,
         CommissionService,
         { provide: ImageSanitizerService, useValue: { sanitize: async () => ({ buffer: Buffer.from('safe'), mimeType: 'image/jpeg', extension: 'jpg' }) } },
-        { provide: NOTIFICATION_GATEWAY, useValue: { notify: async (payload: unknown) => { notifiedPayload = payload; } } },
+        { provide: NOTIFICATION_GATEWAY, useValue: { notify: async (payload: unknown) => { events.push('telegram'); notifiedPayload = payload; } } },
+        { provide: COMMISSION_REPOSITORY, useValue: { salvar: async () => { events.push('banco'); } } },
       ],
     }).compile();
 
@@ -35,6 +38,8 @@ describe('CommissionFacade', () => {
     const result = await facade.submitCommission(dto, {} as Express.Multer.File);
 
     expect(result).toEqual({ orderId: expect.any(String) });
+    // contrato legado preservado + persistência acontece ANTES da notificação
+    expect(events).toEqual(['banco', 'telegram']);
     expect((notifiedPayload as { order: { nickname: string } }).order.nickname).toBe('Cliente');
   });
 });

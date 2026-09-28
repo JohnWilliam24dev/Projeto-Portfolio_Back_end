@@ -1,5 +1,5 @@
 import { Prisma } from '../shared/prisma/prisma-client';
-import type { RegraPrecoAdicional } from './persistence/commission-repository.port';
+import type { RegraPrecoAdicional } from './persistence/produto-repository.port';
 
 export interface AdicionalComPreco {
   tipoAdicionalId: string;

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import sharp from 'sharp';
-import { MAX_IMAGE_PIXELS } from '../../config/commission.config';
-import { ValidationError } from '../../shared/errors/domain.errors';
-import { SafeReferenceFile } from '../commission.types';
+import { MAX_IMAGE_PIXELS } from '../../config/reference-image.config';
+import { ValidationError } from '../errors/domain.errors';
+import { SafeReferenceFile } from './safe-reference-file';
 
 // Mesmo papel do referenceImageSanitizer.js: reencoda pra JPEG via sharp, o que descarta
 // metadados/EXIF e qualquer payload malicioso escondido no arquivo original do cliente.

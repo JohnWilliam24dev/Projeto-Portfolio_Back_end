@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { CommissionService } from './commission.service';
-import { CreateCommissionDto } from './dto/create-commission.dto';
+import { ProdutoService } from './produto.service';
+import { CreateProdutoDto } from './dto/create-produto.dto';
 
 /**
  * Convenção do projeto: todo módulo expõe UMA facade, e ela é o único ponto de contato
  * público. Quem está fora do módulo (controller incluso) nunca deve injetar
- * CommissionService, ImageSanitizerService ou o NotificationGateway diretamente —
+ * ProdutoService, ImageSanitizerService ou o NotificationGateway diretamente —
  * tudo isso é detalhe de implementação escondido atrás desta classe.
  *
  * Por quê: isola o "como" do "o quê". Amanhã o módulo pode ganhar um segundo serviço
@@ -13,10 +13,10 @@ import { CreateCommissionDto } from './dto/create-commission.dto';
  * saber ou ser alterado — a assinatura pública da facade é o único contrato estável.
  */
 @Injectable()
-export class CommissionFacade {
-  constructor(private readonly commissionService: CommissionService) {}
+export class ProdutoFacade {
+  constructor(private readonly produtoService: ProdutoService) {}
 
-  async submitCommission(dto: CreateCommissionDto, referenceFile: Express.Multer.File): Promise<{ orderId: string }> {
-    return this.commissionService.submit(dto, referenceFile);
+  async submitProduto(dto: CreateProdutoDto, referenceFile: Express.Multer.File): Promise<{ token: string }> {
+    return this.produtoService.submit(dto, referenceFile);
   }
 }

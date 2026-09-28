@@ -147,3 +147,24 @@ model Pedido {
   @@index([makerId])
   @@map("pedidos")
 }
+
+// ---------------------------------------------------------------------------
+// LEGADO (/commission) — ponte de compatibilidade durante a migração
+// ---------------------------------------------------------------------------
+// Guarda o pedido EXATAMENTE no contrato antigo da API (nickname/contact/modelType/
+// acessorios/expressoesExtras), sem FK pra nada do modelo novo. Não é a fonte de verdade
+// definitiva: quando o front migrar pro /produto, esta tabela deixa de receber escrita e
+// pode ser removida (ou migrada pra Pedido/Produto por script, se o histórico importar).
+// `id` é o próprio orderId devolvido ao cliente (UUID gerado pela aplicação, como sempre).
+model Commission {
+  id                     String   @id @db.Uuid
+  nickname               String
+  contact                String
+  modelType              String   @map("model_type")
+  additionalContentNotes String   @default("") @map("additional_content_notes")
+  acessorios             Int
+  expressoesExtras       Int      @map("expressoes_extras")
+  criadoEm               DateTime @default(now()) @map("criado_em")
+
+  @@map("commissions")
+}

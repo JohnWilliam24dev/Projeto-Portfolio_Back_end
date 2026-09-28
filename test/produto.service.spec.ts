@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { ProdutoService } from '../src/produto/produto.service';
 import { ImageSanitizerService } from '../src/shared/image/image-sanitizer.service';
@@ -69,7 +70,9 @@ describe('ProdutoService', () => {
     expect(payloadNotificado.precoSimulado.toString()).toBe('120');
   });
 
-  it('não derruba o pedido se o Telegram falhar — o banco já é a fonte da verdade', async () => {
+  it('não derruba o pedido se o Telegram falhar — o banco já é a fonte da verdade, e a falha é logada', async () => {
+    // Silencia o Logger.error esperado (senão polui a saída do Jest) e ainda prova que foi chamado.
+    const loggerError = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
     const moduleRef = await Test.createTestingModule({
       providers: [
         ProdutoService,
@@ -89,6 +92,9 @@ describe('ProdutoService', () => {
     const result = await service.submit(buildDto(), {} as Express.Multer.File);
 
     expect(result).toEqual({ token: 'ZZ999' });
+    expect(loggerError).toHaveBeenCalledTimes(1);
+    expect(loggerError.mock.calls[0][0]).toContain('ZZ999');
+    loggerError.mockRestore();
   });
 
   it('rejeita um adicional que não pertence ao tipo de produto escolhido, sem tocar no banco nem no Telegram', async () => {

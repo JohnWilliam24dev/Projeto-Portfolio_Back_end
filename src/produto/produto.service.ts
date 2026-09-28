@@ -44,7 +44,8 @@ export class ProdutoService {
     const precoSimulado = somarPrecoSimulado(catalogo.precoMedio, adicionaisResolvidos);
     const safeReferenceFile = await this.imageSanitizer.sanitize(referenceFile);
 
-    // 1) Grava no banco. É aqui que o pedido passa a existir de fato.
+    // 1) Grava no banco (o repositório sobe a imagem pro Cloudinary antes e guarda só o link).
+    // O buffer segue em memória: o Telegram recebe a imagem em si, não o link.
     const pedido = await this.produtoRepository.criarPedido({
       makerId: catalogo.makerId,
       produtos: [
@@ -54,6 +55,7 @@ export class ProdutoService {
           contato: dto.contato,
           descricao: dto.descricao,
           precoSimulado,
+          referenceFile: safeReferenceFile,
           adicionais: adicionaisResolvidos.map(({ tipoAdicionalId, descricao }) => ({ tipoAdicionalId, descricao })),
         },
       ],

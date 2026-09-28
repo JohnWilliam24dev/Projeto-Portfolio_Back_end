@@ -1,3 +1,4 @@
+import { SafeReferenceFile } from '../../shared/image/safe-reference-file';
 import { Prisma } from '../../shared/prisma/prisma-client';
 
 // Porta hexagonal, mesmo padrão do NotificationGateway: o service depende só disso,
@@ -27,6 +28,8 @@ export interface CriarProdutoInput {
   contato: string;
   descricao: string;
   precoSimulado: Prisma.Decimal;
+  /** Imagem já sanitizada; o repositório sobe pro storage e grava só a URL. */
+  referenceFile: SafeReferenceFile;
   adicionais: Array<{ tipoAdicionalId: string; descricao: string }>;
 }
 

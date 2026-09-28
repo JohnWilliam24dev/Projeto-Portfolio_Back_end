@@ -33,9 +33,10 @@ export class CommissionService {
 
     const safeReferenceFile = await this.imageSanitizer.sanitize(referenceFile);
     const orderId = randomUUID();
-    // Único acréscimo ao fluxo da main: persistir ANTES de notificar. Contrato de entrada,
+    // Único acréscimo ao fluxo da main: subir a imagem + persistir ANTES de notificar.
+    // O buffer segue em memória: o Telegram recebe a imagem em si (não o link), como sempre. Contrato de entrada,
     // resposta ({ orderId }) e erros (502 se o Telegram falhar) seguem idênticos ao legado.
-    await this.commissionRepository.salvar(orderId, order);
+    await this.commissionRepository.salvar(orderId, order, safeReferenceFile);
     await this.notificationGateway.notify({ orderId, order, referenceFile: safeReferenceFile });
     return { orderId };
   }

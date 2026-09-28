@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { Prisma } from '../../shared/prisma/prisma-client';
 import { IntegrationError } from '../../shared/errors/domain.errors';
+import { IMAGE_STORAGE, ImageStorage, StoredImage } from '../../shared/storage/image-storage.port';
 import {
   ProdutoRepository,
   CriarPedidoInput,
@@ -27,7 +28,10 @@ function isColisaoDeToken(error: unknown): boolean {
 
 @Injectable()
 export class PrismaProdutoRepository implements ProdutoRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(IMAGE_STORAGE) private readonly imageStorage: ImageStorage,
+  ) {}
 
   async buscarTipoProdutoComAdicionais(tipoProdutoId: string): Promise<TipoProdutoCatalogo | null> {
     const tipoProduto = await this.prisma.tipoProduto.findUnique({
@@ -53,6 +57,33 @@ export class PrismaProdutoRepository implements ProdutoRepository {
   }
 
   async criarPedido(input: CriarPedidoInput): Promise<PedidoCriado> {
+    // 1) Imagens primeiro, UMA vez (fora do loop de retry do token): se algum upload falhar,
+    // nada é gravado e as que já subiram são apagadas.
+    const imagens = await this.subirImagens(input);
+
+    // 2) Depois o banco, já com as URLs. Qualquer falha definitiva apaga as imagens órfãs.
+    try {
+      return await this.gravarComRetryDeToken(input, imagens);
+    } catch (error) {
+      await Promise.all(imagens.map((imagem) => this.imageStorage.remove(imagem.publicId)));
+      throw error;
+    }
+  }
+
+  private async subirImagens(input: CriarPedidoInput): Promise<StoredImage[]> {
+    const resultados = await Promise.allSettled(
+      input.produtos.map((produto) => this.imageStorage.upload(produto.referenceFile, 'produto')),
+    );
+    const subidas = resultados.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []));
+    const falhou = resultados.find((r): r is PromiseRejectedResult => r.status === 'rejected');
+    if (falhou) {
+      await Promise.all(subidas.map((imagem) => this.imageStorage.remove(imagem.publicId)));
+      throw falhou.reason;
+    }
+    return subidas;
+  }
+
+  private async gravarComRetryDeToken(input: CriarPedidoInput, imagens: StoredImage[]): Promise<PedidoCriado> {
     // Cada tentativa é um único `create` atômico (Pedido + Produtos + Adicionais aninhados
     // numa query só). Se colidir no token (unique constraint), tenta de novo com um token
     // novo — é mais seguro que "checar se existe, depois inserir" (janela de corrida).
@@ -64,13 +95,15 @@ export class PrismaProdutoRepository implements ProdutoRepository {
             makerId: input.makerId,
             token,
             produtos: {
-              create: input.produtos.map((produto) => ({
+              create: input.produtos.map((produto, indice) => ({
                 makerId: input.makerId,
                 tipoProdutoId: produto.tipoProdutoId,
                 nomeCliente: produto.nomeCliente,
                 contato: produto.contato,
                 descricao: produto.descricao,
                 precoSimulado: produto.precoSimulado,
+                imagemUrl: imagens[indice].url,
+                imagemPublicId: imagens[indice].publicId,
                 adicionaisProduto: {
                   create: produto.adicionais.map((adicional) => ({
                     tipoAdicionalId: adicional.tipoAdicionalId,
@@ -87,8 +120,7 @@ export class PrismaProdutoRepository implements ProdutoRepository {
         throw new IntegrationError('Não foi possível registrar o pedido agora.');
       }
     }
-    // Inalcançável (o loop sempre retorna ou lança antes disso) — só aqui pro TS aceitar
-    // que a função sempre devolve ou lança.
+    // Inalcançável — só pro TS aceitar que a função sempre devolve ou lança.
     throw new IntegrationError('Não foi possível registrar o pedido agora.');
   }
 }

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../shared/prisma/prisma.module';
 import { TelegramModule } from '../shared/notification/telegram.module';
+import { StorageModule } from '../shared/storage/storage.module';
 import { CommissionController } from './commission.controller';
 import { CommissionFacade } from './commission.facade';
 import { CommissionService } from './commission.service';
@@ -19,7 +20,7 @@ import { PrismaCommissionRepository } from './persistence/prisma-commission.repo
 // importar CommissionModule e injetar CommissionService diretamente, o Nest recusa em tempo
 // de bootstrap — a única porta de entrada é a facade.
 @Module({
-  imports: [PrismaModule, TelegramModule],
+  imports: [PrismaModule, TelegramModule, StorageModule],
   controllers: [CommissionController],
   providers: [
     CommissionFacade,

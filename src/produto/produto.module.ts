@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../shared/prisma/prisma.module';
 import { TelegramModule } from '../shared/notification/telegram.module';
+import { StorageModule } from '../shared/storage/storage.module';
 import { ProdutoController } from './produto.controller';
 import { ProdutoFacade } from './produto.facade';
 import { ProdutoService } from './produto.service';
@@ -19,7 +20,7 @@ import { PrismaProdutoRepository } from './persistence/prisma-produto.repository
 // importar ProdutoModule e injetar ProdutoService diretamente, o Nest recusa em tempo
 // de bootstrap — a única porta de entrada é a facade.
 @Module({
-  imports: [PrismaModule, TelegramModule],
+  imports: [PrismaModule, TelegramModule, StorageModule],
   controllers: [ProdutoController],
   providers: [
     ProdutoFacade,

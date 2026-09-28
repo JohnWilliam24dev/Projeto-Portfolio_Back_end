@@ -100,6 +100,10 @@ model Produto {
   contato       String
   descricao     String
   precoSimulado Decimal  @map("preco_simulado") @db.Decimal(10, 2)
+  // Imagem de referência hospedada no Cloudinary (o banco guarda só o link + o id do provedor,
+  // este último necessário pra apagar o arquivo se o pedido for removido/revertido).
+  imagemUrl      String  @map("imagem_url")
+  imagemPublicId String  @map("imagem_public_id")
   criadoEm      DateTime @default(now()) @map("criado_em")
 
   tipoProduto       TipoProduto        @relation(fields: [tipoProdutoId], references: [id])
@@ -164,6 +168,8 @@ model Commission {
   additionalContentNotes String   @default("") @map("additional_content_notes")
   acessorios             Int
   expressoesExtras       Int      @map("expressoes_extras")
+  imagemUrl              String   @map("imagem_url")
+  imagemPublicId         String   @map("imagem_public_id")
   criadoEm               DateTime @default(now()) @map("criado_em")
 
   @@map("commissions")

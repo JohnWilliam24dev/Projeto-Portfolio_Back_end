@@ -11,11 +11,12 @@ function readAllowedOrigins(value: string | undefined): string[] {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Mesma política restritiva do cors.js atual: só os domínios declarados em ALLOWED_ORIGINS.
+  // Ampliado pra além do POST original: GET/PATCH (maker) e x-api-key (ApiKeyGuard)
+  // agora existem e ficariam bloqueados no preflight sem isso.
   app.enableCors({
     origin: readAllowedOrigins(process.env.ALLOWED_ORIGINS),
-    methods: ['POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type'],
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'x-api-key'],
   });
 
   // whitelist+forbidNonWhitelisted reproduz a rejeição de campo desconhecido/duplicado

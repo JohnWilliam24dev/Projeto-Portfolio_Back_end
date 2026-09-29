@@ -9,6 +9,10 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // DIRECT_URL (sem -pooler) é obrigatória em produção: `migrate deploy` usa advisory lock
+    // do Postgres pra evitar migração concorrente, e o PgBouncer em transaction mode (que é
+    // o que a string pooled do Neon usa) não sustenta esse lock — falha com timeout (P1002).
+    // Fallback pra DATABASE_URL só pra manter o dev local funcionando com uma URL só.
+    url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
   },
 });

@@ -41,10 +41,14 @@ export class CommissionService {
     return { orderId };
   }
 
-  // Regra de negócio (teto de 20) mora aqui, não no DTO — o DTO só garante formato de string numérica.
+  // Regra de negócio (inteiro entre 0 e 20) mora aqui, não no DTO — o DTO só garante o formato.
+  // A checagem de piso/inteiro é redundante com o DTO de propósito: o service não deve
+  // depender de quem o chamou ter validado antes.
   private parseQuantity(value: string, label: string): number {
     const quantity = Number(value);
-    if (quantity > MAX_QUANTITY) throw new ValidationError(`${label} inválida.`);
+    if (!Number.isInteger(quantity) || quantity < 0 || quantity > MAX_QUANTITY) {
+      throw new ValidationError(`${label} inválida.`);
+    }
     return quantity;
   }
 }

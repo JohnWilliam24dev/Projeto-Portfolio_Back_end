@@ -38,4 +38,23 @@ describe('CommissionService', () => {
     expect(events).toEqual(['banco', 'telegram']);
     expect((notifiedPayload as { order: { nickname: string } }).order.nickname).toBe('Cliente');
   });
+
+  it('rejeita quantidade negativa, decimal ou acima do teto, sem salvar nem notificar', async () => {
+    const events: string[] = [];
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        CommissionService,
+        { provide: ImageSanitizerService, useValue: { sanitize: async () => ({ buffer: Buffer.from('safe'), mimeType: 'image/jpeg', extension: 'jpg' }) } },
+        { provide: NOTIFICATION_GATEWAY, useValue: { notify: async () => { events.push('telegram'); } } },
+        { provide: COMMISSION_REPOSITORY, useValue: { salvar: async () => { events.push('banco'); } } },
+      ],
+    }).compile();
+    const service = moduleRef.get(CommissionService);
+    const base = { nickname: 'Cliente', contact: '@cliente', modelType: 'chibi', additionalContentNotes: '', expressoesExtras: '1' };
+
+    for (const acessorios of ['-1', '1.5', '21']) {
+      await expect(service.submit({ ...base, acessorios } as CreateCommissionDto, {} as Express.Multer.File)).rejects.toThrow();
+    }
+    expect(events).toEqual([]);
+  });
 });

@@ -31,4 +31,21 @@ describe('CreateCommissionDto', () => {
     const errors = await validate(dto);
     expect(errors.some((error) => error.property === 'acessorios')).toBe(true);
   });
+
+  it('rejeita quantidade negativa', async () => {
+    for (const campo of ['acessorios', 'expressoesExtras'] as const) {
+      const dto = plainToInstance(CreateCommissionDto, { ...validFields, [campo]: '-1' });
+      const errors = await validate(dto);
+      expect(errors.some((error) => error.property === campo)).toBe(true);
+    }
+  });
+
+  it('rejeita quantidade decimal ou com sinal, e aceita 0', async () => {
+    for (const valor of ['1.5', '+3', '.5']) {
+      const dto = plainToInstance(CreateCommissionDto, { ...validFields, acessorios: valor });
+      expect((await validate(dto)).some((error) => error.property === 'acessorios')).toBe(true);
+    }
+    const zero = plainToInstance(CreateCommissionDto, { ...validFields, acessorios: '0', expressoesExtras: '0' });
+    expect(await validate(zero)).toHaveLength(0);
+  });
 });

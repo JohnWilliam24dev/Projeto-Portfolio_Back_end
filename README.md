@@ -71,6 +71,10 @@ src/
   rejeitam campo extra/preenchido por bot, equivalente ao comportamento anterior em Busboy.
 - CORS restrito aos domínios declarados em `ALLOWED_ORIGINS`; token do Telegram só existe no
   servidor, nunca é exposto ao frontend.
+- `AllowedOriginGuard` nas rotas do site (`POST /commission`, `POST /produto`): recusa com 403 toda
+  requisição sem `Origin` ou com origem fora de `ALLOWED_ORIGINS` (comparação exata; lista vazia
+  nega tudo). Barra `curl` ingênuo e sites de terceiros, mas o header é forjável: é a primeira
+  camada, não uma fronteira de segurança.
 
 ## Desenvolvimento
 
@@ -109,4 +113,4 @@ Para obter o `TELEGRAM_CHAT_ID`, envie uma mensagem ao bot e abra
 `https://api.telegram.org/bot<SEU_TOKEN>/getUpdates` uma única vez no navegador. Copie
 `message.chat.id` e remova a URL do histórico. Nunca envie token para o frontend, Git ou chat.
 
-<!-- teste de push automatizado: pode remover esta linha -->
+<!-- teste de push automatizado (2026-10-02): pode remover esta linha -->

@@ -1,4 +1,4 @@
-import { IsEmpty, IsIn, IsNumberString, IsOptional, IsString, Length, MaxLength } from 'class-validator';
+import { IsEmpty, IsIn, IsOptional, IsString, Length, Matches, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { MODEL_LABELS } from '../../config/commission.config';
 
@@ -28,14 +28,13 @@ export class CreateCommissionDto {
   @MaxLength(1_000)
   additionalContentNotes?: string;
 
-  // Mantido como string numérica + limite de 2 dígitos, igual ao parseQuantity() atual
-  // (a conversão pra number e o teto de 20 continuam no service, que é onde mora a regra de negócio).
-  @IsNumberString({}, { message: 'Quantidade de acessórios inválida.' })
-  @Length(1, 2, { message: 'Quantidade de acessórios inválida.' })
+  // String de 1 a 2 dígitos, sem sinal nem casas decimais: '-1', '1.5' e '+3' são formato inválido.
+  // (IsNumberString aceitava esses casos.) A conversão pra number e o teto de 20 continuam
+  // no service, que é onde mora a regra de negócio.
+  @Matches(/^\d{1,2}$/, { message: 'Quantidade de acessórios inválida.' })
   acessorios!: string;
 
-  @IsNumberString({}, { message: 'Quantidade de expressões inválida.' })
-  @Length(1, 2, { message: 'Quantidade de expressões inválida.' })
+  @Matches(/^\d{1,2}$/, { message: 'Quantidade de expressões inválida.' })
   expressoesExtras!: string;
 
   // Honeypot anti-bot: se vier preenchido, o pedido é descartado (checado no controller/service).

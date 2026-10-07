@@ -1,4 +1,4 @@
-import { NotifyPayload } from '../commission.types';
+import { NotifyPayload } from '../commission-legado.types';
 
 // A "porta" do hexagonal: o service depende só disso. Um gateway de e-mail ou WhatsApp
 // vira só mais uma classe que implementa este contrato, exatamente como no comentário

@@ -1,6 +1,6 @@
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { CreateCommissionDto } from '../src/commission/dto/create-commission.dto';
+import { CreateCommissionLegadoDto } from '../src/commission-legado/dto/create-commission-legado.dto';
 
 const validFields = {
   nickname: 'Cliente',
@@ -13,28 +13,28 @@ const validFields = {
 
 // Paridade com test/commissionRequestValidator.test.js: honeypot (campo `website` deve vir
 // vazio) e quantidades não numéricas devem falhar sem "parsear parcialmente" o valor.
-describe('CreateCommissionDto', () => {
+describe('CreateCommissionLegadoDto', () => {
   it('aceita um pedido com campos válidos', async () => {
-    const dto = plainToInstance(CreateCommissionDto, validFields);
+    const dto = plainToInstance(CreateCommissionLegadoDto, validFields);
     const errors = await validate(dto);
     expect(errors).toHaveLength(0);
   });
 
   it('rejeita quando o honeypot (campo website) vem preenchido', async () => {
-    const dto = plainToInstance(CreateCommissionDto, { ...validFields, website: 'http://spam.example' });
+    const dto = plainToInstance(CreateCommissionLegadoDto, { ...validFields, website: 'http://spam.example' });
     const errors = await validate(dto);
     expect(errors.some((error) => error.property === 'website')).toBe(true);
   });
 
   it('rejeita quantidades não numéricas em vez de parsear parcialmente', async () => {
-    const dto = plainToInstance(CreateCommissionDto, { ...validFields, acessorios: '2items' });
+    const dto = plainToInstance(CreateCommissionLegadoDto, { ...validFields, acessorios: '2items' });
     const errors = await validate(dto);
     expect(errors.some((error) => error.property === 'acessorios')).toBe(true);
   });
 
   it('rejeita quantidade negativa', async () => {
     for (const campo of ['acessorios', 'expressoesExtras'] as const) {
-      const dto = plainToInstance(CreateCommissionDto, { ...validFields, [campo]: '-1' });
+      const dto = plainToInstance(CreateCommissionLegadoDto, { ...validFields, [campo]: '-1' });
       const errors = await validate(dto);
       expect(errors.some((error) => error.property === campo)).toBe(true);
     }
@@ -42,10 +42,10 @@ describe('CreateCommissionDto', () => {
 
   it('rejeita quantidade decimal ou com sinal, e aceita 0', async () => {
     for (const valor of ['1.5', '+3', '.5']) {
-      const dto = plainToInstance(CreateCommissionDto, { ...validFields, acessorios: valor });
+      const dto = plainToInstance(CreateCommissionLegadoDto, { ...validFields, acessorios: valor });
       expect((await validate(dto)).some((error) => error.property === 'acessorios')).toBe(true);
     }
-    const zero = plainToInstance(CreateCommissionDto, { ...validFields, acessorios: '0', expressoesExtras: '0' });
+    const zero = plainToInstance(CreateCommissionLegadoDto, { ...validFields, acessorios: '0', expressoesExtras: '0' });
     expect(await validate(zero)).toHaveLength(0);
   });
 });

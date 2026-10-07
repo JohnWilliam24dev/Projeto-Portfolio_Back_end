@@ -1,6 +1,6 @@
 import { IsEmpty, IsIn, IsOptional, IsString, Length, Matches, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { MODEL_LABELS } from '../../config/commission.config';
+import { MODEL_LABELS } from '../../config/commission-legado.config';
 
 // Remove caracteres de controle e colapsa espaços, igual ao normalizeText() do validator atual.
 const sanitizeText = ({ value }: { value: unknown }) =>
@@ -9,7 +9,7 @@ const sanitizeText = ({ value }: { value: unknown }) =>
     .replace(/\s+/g, ' ')
     .trim();
 
-export class CreateCommissionDto {
+export class CreateCommissionLegadoDto {
   @Transform(sanitizeText)
   @IsString()
   @Length(1, 80, { message: 'Nickname inválido.' })

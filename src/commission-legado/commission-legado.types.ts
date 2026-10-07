@@ -1,6 +1,6 @@
 import { SafeReferenceFile } from '../shared/image/safe-reference-file';
 
-export interface CommissionOrder {
+export interface CommissionLegadoOrder {
   nickname: string;
   contact: string;
   modelType: string;
@@ -11,6 +11,6 @@ export interface CommissionOrder {
 
 export interface NotifyPayload {
   orderId: string;
-  order: CommissionOrder;
+  order: CommissionLegadoOrder;
   referenceFile: SafeReferenceFile;
 }

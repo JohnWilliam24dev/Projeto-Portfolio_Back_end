@@ -1,28 +1,28 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { ValidationError } from '../shared/errors/domain.errors';
-import { CreateCommissionDto } from './dto/create-commission.dto';
+import { CreateCommissionLegadoDto } from './dto/create-commission-legado.dto';
 import { ImageSanitizerService } from '../shared/image/image-sanitizer.service';
 import { NOTIFICATION_GATEWAY, NotificationGateway } from './notification/notification-gateway.port';
-import { CommissionOrder } from './commission.types';
-import { COMMISSION_REPOSITORY, CommissionRepository } from './persistence/commission-repository.port';
+import { CommissionLegadoOrder } from './commission-legado.types';
+import { COMMISSION_LEGADO_REPOSITORY, CommissionLegadoRepository } from './persistence/commission-legado-repository.port';
 
 const MAX_QUANTITY = 20;
 
 // Mesmo papel do commissionService.js: orquestra validação -> sanitização -> geração de id ->
 // notificação, sem saber (nem precisar saber) que existe Telegram por trás da porta injetada.
 @Injectable()
-export class CommissionService {
+export class CommissionLegadoService {
   constructor(
     private readonly imageSanitizer: ImageSanitizerService,
     @Inject(NOTIFICATION_GATEWAY) private readonly notificationGateway: NotificationGateway,
-    @Inject(COMMISSION_REPOSITORY) private readonly commissionRepository: CommissionRepository,
+    @Inject(COMMISSION_LEGADO_REPOSITORY) private readonly commissionRepository: CommissionLegadoRepository,
   ) {}
 
-  async submit(dto: CreateCommissionDto, referenceFile: Express.Multer.File) {
+  async submit(dto: CreateCommissionLegadoDto, referenceFile: Express.Multer.File) {
     if (dto.website) throw new ValidationError('Pedido inválido.');
 
-    const order: CommissionOrder = {
+    const order: CommissionLegadoOrder = {
       nickname: dto.nickname,
       contact: dto.contact,
       modelType: dto.modelType,

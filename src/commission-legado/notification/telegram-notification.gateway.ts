@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { MODEL_LABELS } from '../../config/commission.config';
+import { MODEL_LABELS } from '../../config/commission-legado.config';
 import { TelegramSenderService } from '../../shared/notification/telegram-sender.service';
 import { NotificationGateway } from './notification-gateway.port';
-import { NotifyPayload } from '../commission.types';
+import { NotifyPayload } from '../commission-legado.types';
 
 function formatCaption({ orderId, order }: NotifyPayload): string {
   return [

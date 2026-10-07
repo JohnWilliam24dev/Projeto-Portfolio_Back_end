@@ -1,4 +1,4 @@
-import { PrismaCommissionRepository } from '../src/commission/persistence/prisma-commission.repository';
+import { PrismaCommissionLegadoRepository } from '../src/commission-legado/persistence/prisma-commission-legado.repository';
 import { PrismaService } from '../src/shared/prisma/prisma.service';
 import { ImageStorage } from '../src/shared/storage/image-storage.port';
 
@@ -12,10 +12,10 @@ function build(createImpl: (args: unknown) => Promise<unknown>) {
     remove: async (id) => { eventos.push(`remove:${id}`); },
   };
   const prisma = { commissionLegado: { create: async (args: unknown) => { eventos.push('banco'); return createImpl(args); } } } as unknown as PrismaService;
-  return { repo: new PrismaCommissionRepository(prisma, storage), eventos };
+  return { repo: new PrismaCommissionLegadoRepository(prisma, storage), eventos };
 }
 
-describe('PrismaCommissionRepository', () => {
+describe('PrismaCommissionLegadoRepository', () => {
   it('sobe a imagem ANTES do banco e grava só a URL (e o publicId)', async () => {
     let dados: any;
     const { repo, eventos } = build(async (args) => { dados = args; });

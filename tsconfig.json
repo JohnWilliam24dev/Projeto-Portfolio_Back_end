@@ -5,6 +5,9 @@
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    // Necessário para `import x from 'pkg'` em pacotes CommonJS (ex.: sharp 0.35, cujos tipos são ESM
+    // mas o runtime é `module.exports = fn`): sem isso o tsc emite `x_1.default(...)` e quebra em runtime.
+    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "target": "ES2021",
     "sourceMap": true,

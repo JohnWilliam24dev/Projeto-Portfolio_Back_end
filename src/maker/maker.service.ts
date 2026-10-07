@@ -4,6 +4,7 @@ import { gerarSegredoApiKey, hashSegredoApiKey, montarApiKey } from '../shared/a
 import { CreateMakerDto } from './dto/create-maker.dto';
 import { UpdateMakerDto } from './dto/update-maker.dto';
 import { MAKER_REPOSITORY, MakerPublico, MakerRepository } from './persistence/maker-repository.port';
+import { STATUS_PADRAO } from './status-padrao';
 
 export interface MakerCriado extends MakerPublico {
   /** Só existe nesta resposta, uma única vez — não é persistido em texto plano em lugar nenhum. */
@@ -21,6 +22,7 @@ export class MakerService {
       termosCondicoes: dto.termosCondicoes,
       facoENaoFaco: dto.facoENaoFaco,
       apiKeySecretHash: hashSegredoApiKey(segredo),
+      statusIniciais: STATUS_PADRAO,
     });
 
     // A API key só existe montada (makerId + segredo) aqui, na resposta desta chamada.

@@ -11,7 +11,7 @@ function build(createImpl: (args: unknown) => Promise<unknown>) {
     upload: async () => { eventos.push('upload'); return { url: 'https://cdn/x.jpg', publicId: 'commission/x' }; },
     remove: async (id) => { eventos.push(`remove:${id}`); },
   };
-  const prisma = { commission: { create: async (args: unknown) => { eventos.push('banco'); return createImpl(args); } } } as unknown as PrismaService;
+  const prisma = { commissionLegado: { create: async (args: unknown) => { eventos.push('banco'); return createImpl(args); } } } as unknown as PrismaService;
   return { repo: new PrismaCommissionRepository(prisma, storage), eventos };
 }
 

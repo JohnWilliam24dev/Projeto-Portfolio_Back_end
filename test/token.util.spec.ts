@@ -1,4 +1,4 @@
-import { gerarTokenPedido, TAMANHO_TOKEN_PEDIDO } from '../src/produto/persistence/token.util';
+import { gerarTokenPedido, TAMANHO_TOKEN_PEDIDO } from '../src/shared/token/token.util';
 
 describe('gerarTokenPedido', () => {
   it('gera tokens com o tamanho esperado e só com caracteres do alfabeto sem ambiguidade', () => {

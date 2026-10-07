@@ -1,5 +1,5 @@
 import { MakerService } from '../src/maker/maker.service';
-import { MakerRepository } from '../src/maker/persistence/maker-repository.port';
+import { CriarMakerInput, MakerRepository } from '../src/maker/persistence/maker-repository.port';
 
 // Instanciação direta (sem Test.createTestingModule): MakerService só tem injeção via
 // construtor, sem hooks de ciclo de vida do Nest — não precisa do TestingModule pra isso.
@@ -18,6 +18,26 @@ function buildRepositoryStub(overrides: Partial<MakerRepository> = {}): MakerRep
 }
 
 describe('MakerService', () => {
+  it('cadastra o Maker com o kanban padrão: 1 INICIAL, 1 CONCLUIDO, 1 CANCELADO, ordens 1..4', async () => {
+    let statusRecebidos: CriarMakerInput['statusIniciais'] = [];
+    const service = new MakerService(
+      buildRepositoryStub({
+        criar: async (input) => {
+          statusRecebidos = input.statusIniciais;
+          return { id: 'maker-1', nome: input.nome, termosCondicoes: null, facoENaoFaco: null };
+        },
+      }),
+    );
+
+    await service.criar({ nome: 'Fulano' });
+
+    const tipos = statusRecebidos.map((s) => s.tipo);
+    expect(tipos.filter((t) => t === 'INICIAL')).toHaveLength(1);
+    expect(tipos.filter((t) => t === 'CONCLUIDO')).toHaveLength(1);
+    expect(tipos.filter((t) => t === 'CANCELADO')).toHaveLength(1);
+    expect(statusRecebidos.map((s) => s.ordem)).toEqual([1, 2, 3, 4]);
+  });
+
   it('gera e devolve a API key em texto plano só na criação — nunca mais depois disso', async () => {
     const service = new MakerService(buildRepositoryStub());
 

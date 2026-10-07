@@ -16,151 +16,167 @@ datasource db {
   provider = "postgresql"
 }
 
-// ---------------------------------------------------------------------------
-// Catálogo (configurado pelo Maker)
-// ---------------------------------------------------------------------------
+enum StatusTipo {
+  INICIAL
+  EM_ANDAMENTO
+  CONCLUIDO
+  CANCELADO
+}
 
 model Maker {
-  id              String    @id @default(uuid()) @db.Uuid
-  nome            String
-  termosCondicoes String?   @map("termos_condicoes")
-  facoENaoFaco    String?   @map("faco_e_nao_faco")
-  // Auth via API key (decisão: app precisa funcionar offline, então um JWT de vida curta
-  // não serve bem — uma credencial estática guardada no dispositivo é mais adequada agora;
-  // troca pra outro esquema fica fácil já que nada além do ApiKeyGuard depende do formato).
-  // Só o HASH é armazenado — o segredo em si só existe no momento em que é gerado/rotacionado.
-  apiKeySecretHash String?  @map("api_key_secret_hash")
+  id               String    @id @default(uuid()) @db.Uuid
+  nome             String
+  termosCondicoes  String?   @map("termos_condicoes")
+  facoENaoFaco     String?   @map("faco_e_nao_faco")
+  apiKeySecretHash String?   @map("api_key_secret_hash")
   apiKeyGeradaEm   DateTime? @map("api_key_gerada_em")
-  criadoEm        DateTime  @default(now()) @map("criado_em")
+  criadoEm         DateTime  @default(now()) @map("criado_em")
 
-  tiposProduto   TipoProduto[]
-  tiposAdicional TipoAdicional[]
-  pedidos        Pedido[]
+  statuses              Status[]
+  tiposProduto          TipoProduto[]
+  adicionais            Adicional[]
+  tiposProdutoAdicional TipoProdutoAdicional[]
+  produtos              Produto[]
+  commissions           Commission[]
+  commissionAdicionais  CommissionAdicional[]
 
   @@map("makers")
+}
+
+model Status {
+  id       String     @id @default(uuid()) @db.Uuid
+  makerId  String     @map("maker_id") @db.Uuid
+  nome     String
+  ordem    Int
+  tipo     StatusTipo
+  criadoEm DateTime   @default(now()) @map("criado_em")
+
+  maker       Maker        @relation(fields: [makerId], references: [id])
+  commissions Commission[]
+
+  @@unique([id, makerId])
+  @@index([makerId, ordem])
+  @@map("status")
 }
 
 model TipoProduto {
   id         String   @id @default(uuid()) @db.Uuid
   makerId    String   @map("maker_id") @db.Uuid
   nome       String
-  precoMedio Decimal  @map("preco_medio") @db.Decimal(10, 2)
-  descricao  String?
+  precoBase  Decimal  @map("preco_base") @db.Decimal(10, 2)
+  habilitado Boolean  @default(true)
   criadoEm   DateTime @default(now()) @map("criado_em")
 
-  maker          Maker                  @relation(fields: [makerId], references: [id])
-  tiposAdicional TipoProdutoAdicional[]
-  produtos       Produto[]
+  maker       Maker                  @relation(fields: [makerId], references: [id])
+  adicionais  TipoProdutoAdicional[]
+  produtos    Produto[]
+  commissions Commission[]
 
+  @@unique([id, makerId])
   @@index([makerId])
   @@map("tipos_produto")
 }
 
-model TipoAdicional {
+model Adicional {
   id          String   @id @default(uuid()) @db.Uuid
   makerId     String   @map("maker_id") @db.Uuid
   nome        String
   descricao   String?
-  // Regra de negócio (porcentagem XOR valor_fixo) é reforçada por CHECK constraint
-  // na migration — ver prisma/migrations/.../migration.sql após o `migrate dev`.
+  precoFixo   Decimal? @map("preco_fixo") @db.Decimal(10, 2)
   porcentagem Decimal? @db.Decimal(5, 2)
-  valorFixo   Decimal? @map("valor_fixo") @db.Decimal(10, 2)
+  habilitado  Boolean  @default(true)
   criadoEm    DateTime @default(now()) @map("criado_em")
 
-  maker             Maker                  @relation(fields: [makerId], references: [id])
-  tiposProduto      TipoProdutoAdicional[]
-  adicionaisProduto AdicionalProduto[]
+  maker                Maker                  @relation(fields: [makerId], references: [id])
+  tiposProduto         TipoProdutoAdicional[]
+  commissionAdicionais CommissionAdicional[]
 
+  @@unique([id, makerId])
   @@index([makerId])
-  @@map("tipos_adicional")
+  @@map("adicionais")
 }
 
-// Junção N:N — quais Tipos Adicionais valem para qual Tipo de Produto.
 model TipoProdutoAdicional {
-  tipoProdutoId   String @map("tipo_produto_id") @db.Uuid
-  tipoAdicionalId String @map("tipo_adicional_id") @db.Uuid
+  tipoProdutoId String @map("tipo_produto_id") @db.Uuid
+  adicionalId   String @map("adicional_id") @db.Uuid
+  makerId       String @map("maker_id") @db.Uuid
 
-  tipoProduto   TipoProduto   @relation(fields: [tipoProdutoId], references: [id])
-  tipoAdicional TipoAdicional @relation(fields: [tipoAdicionalId], references: [id])
+  maker       Maker       @relation(fields: [makerId], references: [id])
+  tipoProduto TipoProduto @relation(fields: [tipoProdutoId, makerId], references: [id, makerId], onDelete: Cascade)
+  adicional   Adicional   @relation(fields: [adicionalId, makerId], references: [id, makerId], onDelete: Cascade)
 
-  @@id([tipoProdutoId, tipoAdicionalId])
-  @@map("tipos_produto_adicional")
+  @@id([tipoProdutoId, adicionalId])
+  @@index([adicionalId])
+  @@index([makerId])
+  @@map("tipos_produto_adicionais")
 }
-
-// ---------------------------------------------------------------------------
-// Simulação e pedido (preenchidos pelo Guest)
-// ---------------------------------------------------------------------------
 
 model Produto {
-  id            String   @id @default(uuid()) @db.Uuid
-  makerId       String   @map("maker_id") @db.Uuid
-  tipoProdutoId String   @map("tipo_produto_id") @db.Uuid
-  pedidoId      String   @map("pedido_id") @db.Uuid
-  nomeCliente   String   @map("nome_cliente")
-  contato       String
-  descricao     String
-  precoSimulado Decimal  @map("preco_simulado") @db.Decimal(10, 2)
-  // Imagem de referência hospedada no Cloudinary (o banco guarda só o link + o id do provedor,
-  // este último necessário pra apagar o arquivo se o pedido for removido/revertido).
-  imagemUrl      String  @map("imagem_url")
-  imagemPublicId String  @map("imagem_public_id")
-  criadoEm      DateTime @default(now()) @map("criado_em")
+  id             String   @id @default(uuid()) @db.Uuid
+  makerId        String   @map("maker_id") @db.Uuid
+  tipoProdutoId  String   @map("tipo_produto_id") @db.Uuid
+  nome           String
+  descricao      String?
+  imagemUrl      String   @map("imagem_url")
+  imagemPublicId String   @map("imagem_public_id")
+  criadoEm       DateTime @default(now()) @map("criado_em")
 
-  tipoProduto       TipoProduto        @relation(fields: [tipoProdutoId], references: [id])
-  pedido            Pedido             @relation(fields: [pedidoId], references: [id])
-  adicionaisProduto AdicionalProduto[]
+  maker       Maker       @relation(fields: [makerId], references: [id])
+  tipoProduto TipoProduto @relation(fields: [tipoProdutoId, makerId], references: [id, makerId])
 
-  @@index([makerId])
+  @@index([makerId, criadoEm])
   @@index([tipoProdutoId])
-  @@index([pedidoId])
   @@map("produtos")
 }
 
-model AdicionalProduto {
-  id              String @id @default(uuid()) @db.Uuid
-  produtoId       String @map("produto_id") @db.Uuid
-  tipoAdicionalId String @map("tipo_adicional_id") @db.Uuid
-  descricao       String
-
-  produto       Produto       @relation(fields: [produtoId], references: [id])
-  tipoAdicional TipoAdicional @relation(fields: [tipoAdicionalId], references: [id])
-
-  @@index([produtoId])
-  @@map("adicionais_produto")
-}
-
-enum StatusPedido {
-  PENDENTE
-  EM_ANDAMENTO
-  CONCLUIDO
-  CANCELADO
-}
-
-model Pedido {
-  id       String       @id @default(uuid()) @db.Uuid
-  makerId  String       @map("maker_id") @db.Uuid
-  // Até 5 caracteres alfanuméricos, gerado e checado por retry na aplicação
-  // (unique index é quem garante ausência de colisão de fato).
-  token    String       @unique @db.VarChar(5)
-  status   StatusPedido @default(PENDENTE)
-  criadoEm DateTime     @default(now()) @map("criado_em")
-
-  maker    Maker     @relation(fields: [makerId], references: [id])
-  produtos Produto[]
-
-  @@index([makerId])
-  @@map("pedidos")
-}
-
-// ---------------------------------------------------------------------------
-// LEGADO (/commission) — ponte de compatibilidade durante a migração
-// ---------------------------------------------------------------------------
-// Guarda o pedido EXATAMENTE no contrato antigo da API (nickname/contact/modelType/
-// acessorios/expressoesExtras), sem FK pra nada do modelo novo. Não é a fonte de verdade
-// definitiva: quando o front migrar pro /produto, esta tabela deixa de receber escrita e
-// pode ser removida (ou migrada pra Pedido/Produto por script, se o histórico importar).
-// `id` é o próprio orderId devolvido ao cliente (UUID gerado pela aplicação, como sempre).
 model Commission {
+  id                String   @id @default(uuid()) @db.Uuid
+  makerId           String   @map("maker_id") @db.Uuid
+  tipoProdutoId     String   @map("tipo_produto_id") @db.Uuid
+  statusId          String   @map("status_id") @db.Uuid
+  token             String   @unique @db.VarChar(5)
+  nomeCliente       String   @map("nome_cliente")
+  contato           String
+  email             String?
+  descricao         String
+  imagemRefUrl      String   @map("imagem_ref_url")
+  imagemRefPublicId String   @map("imagem_ref_public_id")
+  precoSimulado     Decimal  @map("preco_simulado") @db.Decimal(10, 2)
+  orcamentoFinal    Decimal? @map("orcamento_final") @db.Decimal(10, 2)
+  posicao           Int      @default(0)
+  criadoEm          DateTime @default(now()) @map("criado_em")
+
+  maker       Maker                 @relation(fields: [makerId], references: [id])
+  tipoProduto TipoProduto           @relation(fields: [tipoProdutoId, makerId], references: [id, makerId])
+  status      Status                @relation(fields: [statusId, makerId], references: [id, makerId])
+  adicionais  CommissionAdicional[]
+
+  @@unique([id, makerId])
+  @@index([makerId, statusId, posicao])
+  @@index([tipoProdutoId])
+  @@map("commissions_v2")
+}
+
+model CommissionAdicional {
+  id               String  @id @default(uuid()) @db.Uuid
+  makerId          String  @map("maker_id") @db.Uuid
+  commissionId     String  @map("commission_id") @db.Uuid
+  adicionalId      String  @map("adicional_id") @db.Uuid
+  quantidade       Int
+  descricaoCliente String  @map("descricao_cliente")
+  valorUnitario    Decimal @map("valor_unitario") @db.Decimal(10, 2)
+
+  maker      Maker      @relation(fields: [makerId], references: [id])
+  commission Commission @relation(fields: [commissionId, makerId], references: [id, makerId], onDelete: Cascade)
+  adicional  Adicional  @relation(fields: [adicionalId, makerId], references: [id, makerId])
+
+  @@unique([commissionId, adicionalId])
+  @@index([adicionalId])
+  @@index([makerId])
+  @@map("commission_adicionais")
+}
+
+model CommissionLegado {
   id                     String   @id @db.Uuid
   nickname               String
   contact                String
@@ -172,5 +188,5 @@ model Commission {
   imagemPublicId         String   @map("imagem_public_id")
   criadoEm               DateTime @default(now()) @map("criado_em")
 
-  @@map("commissions")
+  @@map("commissions_legado")
 }

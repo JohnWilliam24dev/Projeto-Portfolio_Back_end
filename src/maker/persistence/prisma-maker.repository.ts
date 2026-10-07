@@ -28,6 +28,9 @@ export class PrismaMakerRepository implements MakerRepository {
         facoENaoFaco: input.facoENaoFaco,
         apiKeySecretHash: input.apiKeySecretHash,
         apiKeyGeradaEm: new Date(),
+        // Create aninhado = uma única escrita atômica (Maker + 4 status): falhou no meio, nada fica
+        // gravado, então nunca existe Maker sem kanban e dispensa $transaction explícito.
+        statuses: { create: input.statusIniciais.map(({ nome, ordem, tipo }) => ({ nome, ordem, tipo })) },
       },
       select: SELECT_PUBLICO,
     });

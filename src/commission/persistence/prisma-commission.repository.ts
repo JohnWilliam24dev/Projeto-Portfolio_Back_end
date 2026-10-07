@@ -19,7 +19,7 @@ export class PrismaCommissionRepository implements CommissionRepository {
 
     // 2) Só então o banco, com a URL. Se falhar, apaga o arquivo pra não deixar órfão.
     try {
-      await this.prisma.commission.create({
+      await this.prisma.commissionLegado.create({
         data: {
           id: orderId,
           nickname: order.nickname,

@@ -112,5 +112,3 @@ Configure `ALLOWED_ORIGINS`, `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID` em
 Para obter o `TELEGRAM_CHAT_ID`, envie uma mensagem ao bot e abra
 `https://api.telegram.org/bot<SEU_TOKEN>/getUpdates` uma única vez no navegador. Copie
 `message.chat.id` e remova a URL do histórico. Nunca envie token para o frontend, Git ou chat.
-
-<!-- teste de push automatizado (2026-10-02): pode remover esta linha -->

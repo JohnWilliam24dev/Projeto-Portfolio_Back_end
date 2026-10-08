@@ -39,26 +39,34 @@ Regras práticas:
 
 ```text
 src/
-├── main.ts                                        bootstrap: CORS, ValidationPipe, exception filter
-├── app.module.ts                                   módulo raiz
-├── config/
-│   └── commission.config.ts                        limites de arquivo/pixels, labels dos modelos
-├── commission/
-│   ├── index.ts                                    barrel público (ver seção acima)
-│   ├── commission.facade.ts                        único export do módulo em runtime
-│   ├── commission.module.ts                         liga porta -> adapter via DI
-│   ├── commission.controller.ts                     rota POST /commission (usa a facade)
-│   ├── commission.service.ts                        caso de uso (interno)
-│   ├── dto/create-commission.dto.ts                 validação de campos (class-validator)
-│   ├── validators/reference-image.pipe.ts           checagem de magic bytes do arquivo
-│   ├── image/image-sanitizer.service.ts             reencode via sharp (remove metadados/EXIF)
-│   └── notification/
-│       ├── notification-gateway.port.ts             a "porta" (interface)
-│       └── telegram-notification.gateway.ts         adapter concreto (Telegram)
+├── main.ts                      bootstrap: CORS, ValidationPipe, exception filter
+├── app.module.ts                módulo raiz
+├── config/                      limites (imagem, pedido) e labels do fluxo legado
+├── maker/                       cadastro do Maker, API key e kanban padrão (4 status)
+├── commission/                  fluxo NOVO (SGA): POST /commissions e GET /commissions/token/:token
+│   ├── commission.facade.ts     único export do módulo em runtime
+│   ├── commission.service.ts    criação do pedido (preço calculado no servidor)
+│   ├── commission-consulta.service.ts   consulta pública por token (só campos públicos)
+│   ├── pricing.util.ts          valor unitário arredondado (ROUND_HALF_UP) e preço simulado
+│   ├── dto/                     validação de entrada (class-validator)
+│   ├── persistence/             portas (comando e consulta) + adapter Prisma
+│   └── notification/            porta + adapter Telegram
+├── commission-legado/           fluxo ANTIGO: POST /commission, contrato congelado (site em produção)
 └── shared/
-    ├── errors/domain.errors.ts                      ValidationError, PayloadTooLargeError, IntegrationError
-    └── filters/http-exception.filter.ts              captura erros e formata a resposta HTTP
+    ├── auth/                    ApiKeyGuard, AllowedOriginGuard
+    ├── image/                   validação (magic bytes) e sanitização (sharp)
+    ├── storage/                 porta + adapter Cloudinary
+    ├── token/                   geração (crypto.randomInt) e validação de formato do token
+    └── errors/, filters/        erros de domínio e formatação da resposta HTTP
 ```
+
+### Rotas do site
+
+| Rota | O que faz |
+|---|---|
+| `POST /commission` | **legado**: contrato antigo, grava em `commissions_legado` |
+| `POST /commissions` | pedido novo (multipart): valida, calcula preço, grava no status `INICIAL` do Maker e notifica |
+| `GET /commissions/token/:token` | consulta pública: status, tipo, preço simulado, orçamento final e data (nunca contato, e-mail ou imagem) |
 
 ## Segurança aplicada
 
@@ -71,7 +79,7 @@ src/
   rejeitam campo extra/preenchido por bot, equivalente ao comportamento anterior em Busboy.
 - CORS restrito aos domínios declarados em `ALLOWED_ORIGINS`; token do Telegram só existe no
   servidor, nunca é exposto ao frontend.
-- `AllowedOriginGuard` nas rotas do site (`POST /commission`, `POST /produto`): recusa com 403 toda
+- `AllowedOriginGuard` nas rotas do site (`/commission` e `/commissions/*`): recusa com 403 toda
   requisição sem `Origin` ou com origem fora de `ALLOWED_ORIGINS` (comparação exata; lista vazia
   nega tudo). Barra `curl` ingênuo e sites de terceiros, mas o header é forjável: é a primeira
   camada, não uma fronteira de segurança.

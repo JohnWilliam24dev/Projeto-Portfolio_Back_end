@@ -26,3 +26,11 @@ export function gerarTokenPedido(): string {
   } while (!temLetraENumero(token));
   return token;
 }
+
+// Formato (alfabeto + tamanho). Não repete a regra "ao menos uma letra e um número": ela existe
+// na geração, e validar só o formato basta pra barrar entrada malformada antes de consultar o banco.
+const TOKEN_FORMATO = new RegExp(`^[${TOKEN_ALPHABET}]{${TAMANHO_TOKEN_PEDIDO}}$`);
+
+export function tokenPedidoValido(token: string): boolean {
+  return TOKEN_FORMATO.test(token);
+}

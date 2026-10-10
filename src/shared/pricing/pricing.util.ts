@@ -1,4 +1,4 @@
-import { Prisma } from '../shared/prisma/prisma-client';
+import { Prisma } from '../prisma/prisma-client';
 
 export interface RegraPrecoAdicional {
   precoFixo: Prisma.Decimal | null;

@@ -39,3 +39,11 @@ export class ForbiddenError extends HttpException {
     super(message, HttpStatus.FORBIDDEN);
   }
 }
+
+// Conflito de estado: a operação é válida, mas o recurso está em uso (ex.: excluir um tipo de
+// produto que já aparece em pedidos). A mensagem deve dizer o que fazer no lugar.
+export class ConflictError extends HttpException {
+  constructor(message = 'A operação conflita com o estado atual do recurso.') {
+    super(message, HttpStatus.CONFLICT);
+  }
+}

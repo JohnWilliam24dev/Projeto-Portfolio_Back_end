@@ -6,7 +6,7 @@ import { CreateCommissionDto } from './dto/create-commission.dto';
 import { AdicionalSelecionadoDto } from './dto/adicional-selecionado.dto';
 import { NOTIFICATION_GATEWAY, NotificationGateway } from './notification/notification-gateway.port';
 import { COMMISSION_REPOSITORY, CommissionRepository, TipoProdutoCatalogo } from './persistence/commission-repository.port';
-import { calcularPrecoSimulado, calcularValorUnitario } from './pricing.util';
+import { calcularPrecoSimulado, calcularValorUnitario } from '../shared/pricing/pricing.util';
 
 // Orquestra o pedido público (SGA 5.7): validação de regra -> precificação NO SERVIDOR ->
 // sanitização -> persistência -> notificação. Não sabe que existem Prisma, Cloudinary ou Telegram.

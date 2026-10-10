@@ -43,11 +43,16 @@ src/
 ├── app.module.ts                módulo raiz
 ├── config/                      limites (imagem, pedido) e labels do fluxo legado
 ├── maker/                       cadastro do Maker, API key e kanban padrão (4 status)
+├── catalogo/                    tipos de produto, adicionais e vitrine pública do Maker (SGA 5.4/5.5)
+│   ├── catalogo.facade.ts       único export do módulo em runtime
+│   ├── tipo-produto.service.ts / adicional.service.ts   CRUD do painel (makerId em toda chamada)
+│   ├── catalogo-consulta.service.ts   vitrine pública, com valor unitário já calculado
+│   ├── adicional-preco.util.ts  regra "exatamente um: preço fixo OU porcentagem"
+│   └── persistence/             portas + adapters Prisma (sempre filtrados por makerId)
 ├── commission/                  fluxo NOVO (SGA): POST /commissions e GET /commissions/token/:token
 │   ├── commission.facade.ts     único export do módulo em runtime
 │   ├── commission.service.ts    criação do pedido (preço calculado no servidor)
 │   ├── commission-consulta.service.ts   consulta pública por token (só campos públicos)
-│   ├── pricing.util.ts          valor unitário arredondado (ROUND_HALF_UP) e preço simulado
 │   ├── dto/                     validação de entrada (class-validator)
 │   ├── persistence/             portas (comando e consulta) + adapter Prisma
 │   └── notification/            porta + adapter Telegram
@@ -56,6 +61,7 @@ src/
     ├── auth/                    ApiKeyGuard, AllowedOriginGuard
     ├── image/                   validação (magic bytes) e sanitização (sharp)
     ├── storage/                 porta + adapter Cloudinary
+    ├── pricing/                 valor unitário arredondado (ROUND_HALF_UP) e preço simulado
     ├── token/                   geração (crypto.randomInt) e validação de formato do token
     └── errors/, filters/        erros de domínio e formatação da resposta HTTP
 ```
@@ -67,6 +73,19 @@ src/
 | `POST /commission` | **legado**: contrato antigo, grava em `commissions_legado` |
 | `POST /commissions` | pedido novo (multipart): valida, calcula preço, grava no status `INICIAL` do Maker e notifica |
 | `GET /commissions/token/:token` | consulta pública: status, tipo, preço simulado, orçamento final e data (nunca contato, e-mail ou imagem) |
+| `GET /makers/:id/catalogo` | vitrine pública: tipos habilitados e seus adicionais habilitados, com `valorUnitario` já calculado |
+
+### Rotas do painel do Maker (header `x-api-key`)
+
+| Rota | O que faz |
+|---|---|
+| `GET/POST /tipos-produto` | lista / cria tipos de produto (`nome`, `precoBase`, `habilitado`) |
+| `PATCH/DELETE /tipos-produto/:id` | edita / exclui (409 se já usado em pedido ou portfólio: desabilite) |
+| `PUT /tipos-produto/:id/adicionais` | substitui o conjunto de adicionais vinculados (`{ adicionalIds: [...] }`) |
+| `GET/POST /adicionais` | lista / cria adicionais (exatamente um entre `precoFixo` e `porcentagem`) |
+| `PATCH/DELETE /adicionais/:id` | edita (informar um preço troca a regra) / exclui (409 se já usado em pedido) |
+
+O dono dos dados é sempre o Maker da API key: o `makerId` nunca vem de body, query ou path, e recurso de outro Maker responde 404.
 
 ## Segurança aplicada
 

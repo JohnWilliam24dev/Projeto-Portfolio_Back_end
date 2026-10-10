@@ -1,5 +1,5 @@
 import { Prisma } from '../src/shared/prisma/prisma-client';
-import { calcularPrecoSimulado, calcularValorUnitario } from '../src/commission/pricing.util';
+import { calcularPrecoSimulado, calcularValorUnitario } from '../src/shared/pricing/pricing.util';
 
 const D = (valor: string | number) => new Prisma.Decimal(valor);
 
